@@ -20,7 +20,7 @@ class Handler {
 	 * @param int $errline
 	 * @param array $errcontext
 	 */
-	public function error_handler ($errno, $errstr, $errfile = '', $errline = '', $errcontext = []) {
+	public function error($errno, $errstr, $errfile = '', $errline = '', $errcontext = []) {
 		// Suppress warnings already supressed by @<function>();
 		if (error_reporting() == 0) {
 			return;
