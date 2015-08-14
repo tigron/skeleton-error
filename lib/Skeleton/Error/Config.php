@@ -39,7 +39,7 @@ class Config {
 	 * @access public
 	 * @var string $errors_to
 	 */
-	public static function $errors_to = 'info@example.com';
+	public static $errors_to = 'info@example.com';
 
 
 }

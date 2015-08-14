@@ -20,7 +20,7 @@ class Handler {
 	 * @param int $errline
 	 * @param array $errcontext
 	 */
-	public function error($errno, $errstr, $errfile = '', $errline = '', $errcontext = []) {
+	public static function error($errno, $errstr, $errfile = '', $errline = '', $errcontext = []) {
 		// Suppress warnings already supressed by @<function>();
 		if (error_reporting() == 0) {
 			return;
@@ -97,7 +97,7 @@ class Handler {
 			     . 'Vartrace: ' . "\n"
 			     . $vars;
 
-		report($subject, $message, $die);
+		self::report($subject, $message, $die);
 	}
 
 	/**
@@ -106,12 +106,12 @@ class Handler {
 	 * @access public
 	 * @param Exception $exception
 	 */
-	public function exception($exception) {
+	public static function exception($exception) {
 		if (get_class($exception) == 'Twig_Error_Syntax') {
-			$this->twig_exception_syntax($exception);
+			self::twig_exception_syntax($exception);
 			return;
 		} elseif (get_class($exception) == 'Twig_Error_Loader' OR get_class($exception) == 'Twig_Error_Runtime') {
-			$this->twig_exception($exception);
+			self::twig_exception($exception);
 			return;
 		}
 
@@ -128,7 +128,7 @@ class Handler {
 
 		$subject = 'System Exception on '. $host;
 
-		$this->report($subject, $exception, true);
+		self::report($subject, $exception, true);
 	}
 
 	/**
@@ -137,8 +137,8 @@ class Handler {
 	 * @access private
 	 * @param Exception $exception
 	 */
-	private function twig_exception($exception) {
-		$this->report('Twig error', '<b>' . $exception->getMessage() . '</b> in ' . $exception->getFile(), false, false);
+	private static function twig_exception($exception) {
+		self::report('Twig error', '<b>' . $exception->getMessage() . '</b> in ' . $exception->getFile(), false, false);
 	}
 
 	/**
@@ -147,7 +147,7 @@ class Handler {
 	 * @access private
 	 * @param Exception $exception
 	 */
-	private function twig_exception_syntax($exception) {
+	private static function twig_exception_syntax($exception) {
 		if (substr($exception->getFileName(), -5) == 'macro') {
 			$file = file(APP_PATH . '/macro/' . $exception->getFileName());
 		} else {
@@ -189,7 +189,7 @@ class Handler {
 			$message .= print_r($template->get_assigned(), true);
 		} catch (Exception $e) {}
 
-		$this->report('Twig syntax error', $message, false, false);
+		self::report('Twig syntax error', $message, false, false);
 	}
 
 	/**
@@ -201,7 +201,7 @@ class Handler {
 	 * @param bool $fatal
 	 * @param bool $backtrace
 	 */
-	private function report($subject, $message, $fatal = false, $backtrace = true) {
+	private static function report($subject, $message, $fatal = false, $backtrace = true) {
 		$html =
 		'<html>' .
 		'   <head>' .
@@ -244,12 +244,12 @@ class Handler {
 
 		$headers = 'From: ' . Config::$errors_from . "\r\n";
 		$headers.= 'Content-Type: text/html; charset=ISO-8859-1 MIME-Version: 1.0';
-		mail($config->errors_to, $subject, $html, $headers, '-f ' . Config::$errors_from);
+		mail(Config::$errors_to, $subject, $html, $headers, '-f ' . Config::$errors_from);
 
 		if (Config::$debug) {
 			echo $html;
 		} elseif ($fatal) {
-			show_clean_error();
+			self::show_clean_error();
 		}
 
 		if ($fatal) {
@@ -262,7 +262,7 @@ class Handler {
 	 *
 	 * @access private
 	 */
-	private function show_clean_error() {
+	private static function show_clean_error() {
 		echo 'An unexpected error occured. Please try again later.<br />';
 	}
 }
