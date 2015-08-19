@@ -147,49 +147,9 @@ class Handler {
 	 * @access private
 	 * @param Exception $exception
 	 */
-	private static function twig_exception_syntax($exception) {
-		if (substr($exception->getFileName(), -5) == 'macro') {
-			$file = file(APP_PATH . '/macro/' . $exception->getFileName());
-		} else {
-			$file = file(APP_PATH . '/template/' . $exception->getFileName());
-		}
-
-		$line = (int)preg_replace('@.* at line @', '', $exception->getMessage());
-
-		$message = '<b>Error: ' . $exception->getMessage() . "</b>\n\n";
-
-		for ($i = 1; $i<=9; $i++) {
-			$display_line = $line-5+$i;
-
-			if ($display_line <= 0 || $display_line > count($file)) {
-				continue;
-			}
-
-			if ($display_line == $line) {
-				$message .= '<span style="background: #eee;">';
-			}
-
-			$message .= trim('<b>' . ($display_line) . '</b> ' . htmlspecialchars($file[$line-6+$i]));
-
-			if (($display_line) == $line) {
-				$message .= '</span>';
-			}
-
-			$message .=  "\n";
-		}
-
-		$message .=  "\n";
-
-		// Since we know that the error occurred in a template, it is not safe
-		// to assume the Templates are working and callable. Use try/catch.
-		try {
-			$template = Web_Template::get();
-
-			$message .= '<b>Variables</b> ' . "\n\n";
-			$message .= print_r($template->get_assigned(), true);
-		} catch (Exception $e) {}
-
-		self::report('Twig syntax error', $message, false, false);
+	private static function twig_exception_syntax(\Twig_Error_Syntax $exception) {
+		// TODO: improve the Twig error reporting, move it to skeleton-template-twig
+		self::report('Twig syntax error', $exception->getMessage(), false, false);
 	}
 
 	/**
