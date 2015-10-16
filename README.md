@@ -2,9 +2,13 @@
 
 ## Description
 
-This library takes care of the error reporting. If debug is enabled, it
-shows the error in a pretty layout.
-If debug is disabled, errors are mailed to the configured email address.
+This library takes care of the error reporting.
+
+It will use Whoops and Sentry_Raven if their presence can be detected and the
+required configuration exists, otherwise it will fall back to its own basic
+error handler.
+
+It can spam your mailbox with errors if you so desire.
 
 ## Installation
 
@@ -16,11 +20,13 @@ Installation via composer:
 
 Initialize the package
 
-    Skeleton\Error\Config::$debug = true // Yes I want to show the errors
-    Skeleton\Error\Config::$errors_from = $application_email_address
-    Skeleton\Error\Config::$errors_to = $developer_email_address
+    \Skeleton\Error\Config::$debug = true; // Yes I want to show the errors
+    \Skeleton\Error\Config::$sentry_dsn = 'http://foo:bar@sentry.example.com/123'; // Your Sentry DSN (optional)
+    \Skeleton\Error\Config::$mail_errors_to = 'colleague@example.com';
 
 Now make it the default error handler
 
-    set_error_handler(['\Skeleton\Error\Handler', 'error']);
-    set_exception_handler(['\Skeleton\Error\Handler', 'exception']);
+    \Skeleton\Error\Handler::enable();
+
+If you install the composer packages `filp/whoops` and/or `raven/raven`, the
+handler wil use them.

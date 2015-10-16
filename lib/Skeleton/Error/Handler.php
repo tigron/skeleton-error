@@ -1,6 +1,9 @@
 <?php
 /**
- * Error handler class
+ * Error handler for Skeleton
+ *
+ * If Whoops is installed, it will use that, otherwise it will fall back to the
+ * (basic) internal error handler for CLI and web.
  *
  * @author Christophe Gosiau <christophe@tigron.be>
  * @author Gerry Demaret <gerry@tigron.be>
@@ -8,221 +11,225 @@
 
 namespace Skeleton\Error;
 
+use Exception;
+
 class Handler {
+	/**
+	 * All handlers we need to execute
+	 *
+	 * @var array
+	 */
+	private $handlers = [];
 
 	/**
-	 * Handle error
+	 * Patterns for paths we shouldn't care about
 	 *
-	 * @access public
-	 * @param int $errono
-	 * @param string $errstr
-	 * @param string $errfile
-	 * @param int $errline
-	 * @param array $errcontext
+	 * @var array
 	 */
-	public static function error($errno, $errstr, $errfile = '', $errline = '', $errcontext = []) {
-		// Suppress warnings already supressed by @<function>();
-		if (error_reporting() == 0) {
-			return;
-		}
+	private $silenced_paths = [];
 
-		static $exec_id = 0;
+	/**
+	 * Are we registered yet?
+	 *
+	 * @var bool
+	 */
+	private $is_registered = false;
 
-		if ($exec_id == 0) {
-			$exec_id = rand();
-		}
+	/**
+	 * Enable the error handler, assuming defaults
+	 */
+	public static function enable() {
+		$handler = new self();
+		$handler->register();
+	}
 
-		$msg = '';
-		$die = false;
+	/**
+	 * Register ourselves
+	 */
+	public function register() {
+		if (!$this->is_registered) {
+			// Automatically use Sentry if detected
+			if ($this->detected_sentry_raven() and Config::$sentry_dsn !== null) {
+				$this->add_handler(new Handler\Sentry());
+			}
 
-		$date = date('Y-m-d H:i:s (T)');
-		$errortype = [E_ERROR             => 'Error',
-			                E_WARNING           => 'Warning',
-			                E_PARSE             => 'Parsing Error',
-			                E_NOTICE            => 'Notice',
-			                E_CORE_ERROR        => 'Core Error',
-			                E_CORE_WARNING      => 'Core Warning',
-			                E_COMPILE_ERROR     => 'Compile Error',
-			                E_COMPILE_WARNING   => 'Compile Warning',
-			                E_USER_ERROR        => 'User Error',
-			                E_USER_WARNING      => 'User Warning',
-			                E_USER_NOTICE       => 'User Notice',
-			                E_STRICT            => 'Runtime Notice',
-			                E_DEPRECATED        => 'Deprecated'
-			         ];
+			// If we configured mail, send mail too
+			if (Config::$mail_errors_to !== null) {
+				$this->add_handler(new Handler\Mail());
+			}
 
-		switch ($errno) {
-			case E_ERROR:
-			case E_CORE_ERROR:
-			case E_USER_ERROR:
-				$die = true;
-				break;
-			case E_STRICT:
-				// Don't report strict errors for PEAR
-				if (preg_match('/^\/usr\/share\/php\/(.*)$/', $errfile, $matches))
-					return;
-			case E_PARSE:
-				var_dump($errcontext);
-				break;
-			case E_NOTICE:
-				// Don't report notices errors for PEAR
-				if (preg_match('/^\/usr\/share\/php\/(.*)$/', $errfile, $matches))
-					return;
-			case E_DEPRECATED:
-				if (preg_match('/^\/usr\/share\/php\/(.*)$/', $errfile, $matches)) {
-					return;
+			// Always add the application handler
+			$this->add_handler(new Handler\Application());
+
+			if (Config::$debug === true) {
+				// If we detect Whoops, use that instead of our basic handler
+				if ($this->detected_whoops()) {
+					$this->add_handler(new Handler\Whoops());
+				} else {
+					$this->add_handler(new Handler\BasicCLI());
+					$this->add_handler(new Handler\Basic());
 				}
+			} else {
+				// If we are not in debug, and we end up as the last handler,
+				// send some crude error message to the user's browser.
+				$this->add_handler(new Handler\BasicOutput());
+			}
+
+			set_error_handler([$this, 'handle_error']);
+			set_exception_handler([$this, 'handle_exception']);
+			register_shutdown_function([$this, 'handle_shutdown']);
+
+			$this->is_registered = true;
 		}
-
-		ob_start();
-			print_r($errcontext);
-			$vars = ob_get_contents();
-		ob_end_clean();
-
-		if (isset($_SERVER['SERVER_NAME'])) {
-			$host = $_SERVER['SERVER_NAME'];
-		} else {
-			$host = 'commandline';
-		}
-
-		$subject = $errortype[$errno].' on '.$host;
-
-		$message = 'Date: ' . $date . "\n"
-			     . 'Host: ' . $host . "\n"
-			     . 'Error: ' . $errno . "\n"
-			     . 'Error Type: ' . $errortype[$errno] . "\n"
-			     . 'Error Message: ' . $errstr . "\n"
-			     . 'Script: ' . $errfile . "\n"
-			     . 'Line: ' . $errline . "\n\n"
-			     . 'Vartrace: ' . "\n"
-			     . $vars;
-
-		self::report($subject, $message, $die);
 	}
 
 	/**
-	 * Exception handler
+	 * Unregister ourselves
+	 */
+	public function unregister() {
+		restore_exception_handler();
+		restore_error_handler();
+	}
+
+	/**
+	 * Add a handler
 	 *
-	 * @access public
+	 * @param Skeleton\Error\Handler\Interface $handler
+	 */
+	public function add_handler(Handler\HandlerInterface $handler) {
+		$this->handlers[] = $handler;
+	}
+
+	/**
+	 * Add a pattern for a path to silence
+	 *
+	 * @param string $pattern A pattern compatible with preg_match()
+	 */
+	public function add_silenced_path($pattern) {
+		$this->silenced_paths[] = $pattern;
+	}
+
+
+	/**
+	 * Handle an exception
+	 *
 	 * @param Exception $exception
+	 * @return string $output Output generated by the configured handlers
 	 */
-	public static function exception($exception) {
-		if (get_class($exception) == 'Twig_Error_Syntax') {
-			self::twig_exception_syntax($exception);
-			return;
-		} elseif (get_class($exception) == 'Twig_Error_Loader' OR get_class($exception) == 'Twig_Error_Runtime') {
-			self::twig_exception($exception);
-			return;
+	public function handle_exception(Exception $exception) {
+		$quit = false;
+		$output = '';
+
+		foreach ($this->handlers as $handler) {
+			if ($handler->can_run()) {
+				$handler->set_exception($exception);
+
+				// The output is a concatenation of all output returned by the
+				// handlers. Ideally, we only have one handler sending output.
+				$output .= $handler->handle();
+
+				if ($handler->requests_quit() === true) {
+					$quit = $handler->requests_quit();
+				}
+
+				// If the handler claims it should be the last handler, break out of the loop
+				if ($handler->is_last() === true) {
+					break;
+				}
+			}
 		}
 
-		ob_start();
-			print_r($exception);
-			$exception = ob_get_contents();
-		ob_end_clean();
-
-		if (isset($_SERVER['SERVER_NAME'])) {
-			$host = $_SERVER['SERVER_NAME'];
-		} else {
-			$host = 'commandline';
+		if (trim($output) !== '') {
+			echo $output;
 		}
 
-		$subject = 'System Exception on '. $host;
-
-		self::report($subject, $exception, true);
-	}
-
-	/**
-	 * Handler for twig exceptions
-	 *
-	 * @access private
-	 * @param Exception $exception
-	 */
-	private static function twig_exception($exception) {
-		self::report('Twig error', '<b>' . $exception->getMessage() . '</b> in ' . $exception->getFile(), false, false);
-	}
-
-	/**
-	 * Handler for twig syntax exceptions
-	 *
-	 * @access private
-	 * @param Exception $exception
-	 */
-	private static function twig_exception_syntax(\Twig_Error_Syntax $exception) {
-		// TODO: improve the Twig error reporting, move it to skeleton-template-twig
-		self::report('Twig syntax error', $exception->getMessage(), false, false);
-	}
-
-	/**
-	 * Report an error
-	 *
-	 * @access private
-	 * @param string $subject
-	 * @param string $message
-	 * @param bool $fatal
-	 * @param bool $backtrace
-	 */
-	private static function report($subject, $message, $fatal = false, $backtrace = true) {
-		$html =
-		'<html>' .
-		'   <head>' .
-		'       <title>' . $subject . '</title>' .
-		'       <style type="text/css">' .
-		'           body { font-family: sans-serif; background: #eee; } ' .
-		'           pre { border: 1px solid #1b2582; background: #ccc; padding: 5px; }' .
-		'           h1 { width: 100%; background: #183452; font-weight: bold; color: #fff; padding: 2px; font-size: 16px;} ' .
-		'           h2 { font-size: 15px; } ' .
-		'       </style>' .
-		'   </head>' .
-		'   <body>' .
-		'   <h1>' . $subject . '</h1>';
-
-		$html .= '<h2>Message</h2> <pre>' . $message . '</pre>';
-
-
-		if ($backtrace == true) {
-			ob_start();
-				debug_print_backtrace();
-				$backtrace = ob_get_contents();
-			ob_end_clean();
-
-			$html .= '<h2>Backtrace</h2> <pre>' . $backtrace . '</pre>';
-		}
-
-		$vartrace = [
-			'_GET'      => isset($_GET) ? $_GET : null,
-			'_POST'     => isset($_POST) ? $_POST : null,
-			'_COOKIE'   => isset($_COOKIE) ? $_COOKIE : null,
-			'_SESSION'  => isset($_SESSION) ? $_SESSION : null,
-			'_SERVER'   => isset($_SERVER) ? $_SERVER : null
-		];
-
-		$html .= '<h2>Vartrace</h2> <pre> ' . print_r($vartrace, true) . '</pre>';
-
-		$html .=
-		'   </body>' .
-		'</html>';
-
-		$headers = 'From: ' . Config::$errors_from . "\r\n";
-		$headers.= 'Content-Type: text/html; charset=ISO-8859-1 MIME-Version: 1.0';
-		mail(Config::$errors_to, $subject, $html, $headers, '-f ' . Config::$errors_from);
-
-		if (Config::$debug) {
-			echo $html;
-		} elseif ($fatal) {
-			self::show_clean_error();
-		}
-
-		if ($fatal) {
+		if ($quit === true) {
+			// Since we are exiting after an error, don't exit with 0
 			exit(1);
 		}
 	}
 
 	/**
-	 * Show a clean error to the browser
+	 * Handle an error
 	 *
-	 * @access private
+	 * This method is complatible with the error_handler callback, as documented
+	 * for set_error_handler()
+	 *
+	 * @param int $level The error level
+	 * @param string $message The error message
+	 * @param string $file The file in which the error occurred
+	 * @param int $errline The line number in the file where the error occurred
+	 * @return bool
 	 */
-	private static function show_clean_error() {
-		echo 'An unexpected error occured. Please try again later.<br />';
+	public function handle_error($level, $message, $file = null, $line = null) {
+		if ($level & error_reporting()) {
+			if ($this->is_silenced($file)) {
+				return true;
+			}
+
+			$this->handle_exception(new \ErrorException($message, 0, $level, $file, $line));
+
+			// Do not propagate errors which were already handled
+			return true;
+		}
+
+		// Propagate error to the next handler, allows error_get_last() to
+		// work on silenced errors.
+		return false;
+	}
+
+	/**
+	 * Handle the shutdown event
+	 */
+	public function handle_shutdown() {
+		// Since we can not unregister a shutdown function, simply don't do
+		// anything if we aren't registered
+		if ($this->is_registered === false) {
+			return;
+		}
+
+		// Do something useful here.
+	}
+
+	/**
+	 * Check if a given path has been silenced
+	 *
+	 * @param string $path
+	 * @return bool
+	 */
+	private function is_silenced($path) {
+		foreach ($this->silenced_paths as $silenced_path) {
+			if (preg_match($silenced_path, $path)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if we have detected a Whoops installation
+	 *
+	 * @return bool
+	 */
+	private function detected_whoops() {
+		if (class_exists('Whoops\Run')) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if we have detected a Sentry Raven installation
+	 *
+	 * @return bool
+	 */
+	private function detected_sentry_raven() {
+		if (class_exists('Raven_Client')) {
+			return true;
+		}
+
+		return false;
 	}
 }

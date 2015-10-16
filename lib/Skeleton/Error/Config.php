@@ -29,17 +29,25 @@ class Config {
 	 * @access public
 	 * @var string $errors_from
 	 */
-	public static $errors_from = 'info@example.com';
+	public static $mail_errors_from = 'info@example.com';
 
 	/**
 	 * errors_to
 	 *
-	 * Send errors to email address
+	 * Send errors to email address. Set to null to disable mailing completely.
 	 *
 	 * @access public
 	 * @var string $errors_to
 	 */
-	public static $errors_to = 'info@example.com';
+	public static $mail_errors_to = null;
 
-
+	/**
+	 * sentry_dsn
+	 *
+	 * If you have Sentry Raven installed, you can supply the Sentry DSN.
+	 *
+	 * @access public
+	 * @var string $sentry_dsn;
+	 */
+	public static $sentry_dsn = null;
 }
