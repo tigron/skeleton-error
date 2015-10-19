@@ -23,6 +23,7 @@ Initialize the package
     \Skeleton\Error\Config::$debug = true; // Yes I want to show the errors
     \Skeleton\Error\Config::$sentry_dsn = 'http://foo:bar@sentry.example.com/123'; // Your Sentry DSN (optional)
     \Skeleton\Error\Config::$mail_errors_to = 'colleague@example.com';
+    \Skeleton\Error\Config::$mail_errors_from = 'errors@example.com';
 
 Now make it the default error handler
 
