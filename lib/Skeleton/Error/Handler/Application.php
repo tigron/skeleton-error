@@ -33,6 +33,10 @@ class Application extends Handler {
 	 */
 	public function can_run() {
 		// This handler can only run when we have an application defined
+		if (class_exists('\\Skeleton\\Core\\Application') === false) {
+			return false;
+		}
+		
 		try {
 			\Skeleton\Core\Application::get();
 			return true;
