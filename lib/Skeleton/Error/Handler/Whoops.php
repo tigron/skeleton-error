@@ -22,9 +22,11 @@ class Whoops extends Handler {
 	 * @return string
 	 */
 	public function handle() {
-		$whoops = new \Skeleton\Error\Util\WhoopsWrapper();
+		$whoops = new \Whoops\Run();
 		$whoops->pushHandler(new \Whoops\Handler\PlainTextHandler());
 		$whoops->pushHandler(new \Whoops\Handler\PrettyPageHandler());
+		$whoops->allowQuit(false);
+		$whoops->writeToOutput(false);
 		return $whoops->handleException($this->exception);
 	}
 
