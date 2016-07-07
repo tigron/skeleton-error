@@ -4,7 +4,7 @@
 
 This library takes care of the error reporting.
 
-It will use Whoops and Sentry_Raven if their presence can be detected and the
+It will use Whoops and Sentry if their presence can be detected and the
 required configuration exists, otherwise it will fall back to its own basic
 error handler.
 
@@ -29,5 +29,5 @@ Now make it the default error handler
 
     \Skeleton\Error\Handler::enable();
 
-If you install the composer packages `filp/whoops` and/or `raven/raven`, the
+If you install the composer packages `filp/whoops` and/or `sentry/sentry`, the
 handler wil use them.

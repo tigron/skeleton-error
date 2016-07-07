@@ -49,7 +49,7 @@ class Handler {
 	public function register() {
 		if (!$this->is_registered) {
 			// Automatically use Sentry if detected
-			if ($this->detected_sentry_raven() and Config::$sentry_dsn !== null) {
+			if ($this->detected_sentry() and Config::$sentry_dsn !== null) {
 				$this->add_handler(new Handler\Sentry());
 			}
 
@@ -221,11 +221,11 @@ class Handler {
 	}
 
 	/**
-	 * Check if we have detected a Sentry Raven installation
+	 * Check if we have detected a sentry/sentry package
 	 *
 	 * @return bool
 	 */
-	private function detected_sentry_raven() {
+	private function detected_sentry() {
 		if (class_exists('Raven_Client')) {
 			return true;
 		}

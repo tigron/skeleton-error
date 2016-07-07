@@ -44,7 +44,7 @@ class Config {
 	/**
 	 * sentry_dsn
 	 *
-	 * If you have Sentry Raven installed, you can supply the Sentry DSN.
+	 * If you have sentry/sentry installed, you can supply the Sentry DSN.
 	 *
 	 * @access public
 	 * @var string $sentry_dsn;
