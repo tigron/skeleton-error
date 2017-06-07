@@ -15,9 +15,9 @@ interface HandlerInterface {
 	public function handle();
 
 	/**
-	 * @param \Exception $exception
+	 * @param $exception (can be \Throwable or \Exception)
 	 */
-	public function set_exception(\Exception $exception);
+	public function set_exception($exception);
 
 	/**
 	 * @return bool

@@ -33,9 +33,9 @@ abstract class Handler implements HandlerInterface {
 	/**
 	 * Set the exception to handle
 	 *
-	 * @param \Exception $exception
+	 * @param $exception (can be \Throwable or \Exception)
 	 */
-	public function set_exception(\Exception $exception) {
+	public function set_exception($exception) {
 		$this->exception = $exception;
 	}
 

@@ -55,10 +55,10 @@ class Basic extends Handler {
 	/**
 	 * Produce a subject based on the error
 	 *
-	 * @param \Exception $exception
+	 * @param $exception (can be \Throwable or \Exception)
 	 * @return string
 	 */
-	public static function get_subject(\Exception $exception) {
+	public static function get_subject($exception) {
 		$application = null;
 
 		try {
@@ -85,10 +85,10 @@ class Basic extends Handler {
 	/**
 	 * Produce some HTML around the error
 	 *
-	 * @param \Exception $exception
+	 * @param $exception (can be \Throwable or \Exception)
 	 * @return string
 	 */
-	public static function get_html(\Exception $exception) {
+	public static function get_html($exception) {
 		$subject = self::get_subject($exception);
 
 		if ($exception instanceof \ErrorException) {
