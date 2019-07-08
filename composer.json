@@ -7,7 +7,7 @@
     },
     "require-dev": {
         "tigron/skeleton-core": "dev-master"
-    }
+    },
     "license": "MIT",
     "authors": [
         {
