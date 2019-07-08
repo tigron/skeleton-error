@@ -3,7 +3,7 @@
     "description": "Skeleton error handling",
     "type": "library",
     "require": {
-    	"tigron/skeleton-core": "1.*",
+    	"tigron/skeleton-core": "1.*"
     },
     "license": "MIT",
     "authors": [
