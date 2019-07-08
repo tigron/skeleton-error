@@ -2,9 +2,8 @@
     "name": "tigron/skeleton-error",
     "description": "Skeleton error handling",
     "type": "library",
-    "require-dev": {
-		"tigron/skeleton-database": "dev-master",
-		"tigron/skeleton-object": "dev-master"
+    "require": {
+    	"tigron/skeleton-core": "1.*",
     },
     "license": "MIT",
     "authors": [

@@ -12,17 +12,20 @@
 namespace Skeleton\Error\Handler;
 
 class Application extends Handler {
+
 	/**
-	 * Handle the exception with a hook in the current application
+	 * Handle the exception with an event in the current application
 	 *
 	 * @return string
 	 */
 	public function handle() {
-		if (\Skeleton\Core\Hook::exists('handle_error', [$this->exception])) {
+		$application = \Skeleton\Core\Application::get();
+
+		if ($application->event_exists('error', 'exception')) {
 			// If the error is handled within the application, no need to continue
 			// internally.
 			$this->last_handler = true;
-			\Skeleton\Core\Hook::call('handle_error', [$this->exception]);
+			$application->call_event_if_exists('error', 'exception', [ $this->exception ]);
 		}
 	}
 
@@ -36,7 +39,7 @@ class Application extends Handler {
 		if (class_exists('\\Skeleton\\Core\\Application') === false) {
 			return false;
 		}
-		
+
 		try {
 			\Skeleton\Core\Application::get();
 			return true;
