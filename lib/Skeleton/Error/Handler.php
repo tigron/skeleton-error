@@ -167,10 +167,7 @@ class Handler {
 				return true;
 			}
 
-			$this->handle_exception(new \ErrorException($message, 0, $level, $file, $line));
-
-			// Do not propagate errors which were already handled
-			return true;
+			throw new \ErrorException($message, 0, $level, $file, $line);
 		}
 
 		// Propagate error to the next handler, allows error_get_last() to
