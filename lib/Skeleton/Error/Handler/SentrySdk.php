@@ -1,6 +1,6 @@
 <?php
 /**
- * Sentry handler for for Skeleton\Error
+ * sentry/sdk handler for for Skeleton\Error
  *
  * @author Christophe Gosiau <christophe@tigron.be>
  * @author Gerry Demaret <gerry@tigron.be>
@@ -8,7 +8,7 @@
 
 namespace Skeleton\Error\Handler;
 
-class Sentry extends Handler {
+class SentrySdk extends Handler {
 	/**
 	 * Handle an error with Sentry
 	 *
@@ -16,14 +16,17 @@ class Sentry extends Handler {
 	 */
 	public function handle() {
 		// Instantiate a new Raven_Client with the configured DSN
-		$client = new \Raven_Client(\Skeleton\Error\Config::$sentry_dsn);
+        $builder = \Sentry\ClientBuilder::create(['dsn' => \Skeleton\Error\Config::$sentry_dsn]);
+		\Sentry\State\Hub::getCurrent()->bindClient($builder->getClient());
 
 		// Assign the session to the extra context
 		if (isset($_SESSION)) {
-			$client->extra_context(['session' => print_r($_SESSION, true)]);
+			\Sentry\State\Hub::getCurrent()->configureScope(function (\Sentry\State\Scope $scope): void {
+				$scope->setExtra('session', print_r($_SESSION, true));
+			});
 		}
 
-		$client->captureException($this->exception);
+		\Sentry\SentrySdk::getCurrentHub()->captureException($this->exception);
 	}
 
 	/**

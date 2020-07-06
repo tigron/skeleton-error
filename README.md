@@ -29,5 +29,5 @@ Now make it the default error handler
 
     \Skeleton\Error\Handler::enable();
 
-If you install the composer packages `filp/whoops` and/or `sentry/sentry`, the
-handler wil use them.
+If you install the composer packages `filp/whoops`, `sentry\sdk` and/or
+`sentry/sentry`, the handler wil use them.

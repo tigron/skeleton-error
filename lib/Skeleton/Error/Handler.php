@@ -48,9 +48,14 @@ class Handler {
 	 */
 	public function register() {
 		if (!$this->is_registered) {
-			// Automatically use Sentry if detected
-			if ($this->detected_sentry() and Config::$sentry_dsn !== null) {
-				$this->add_handler(new Handler\Sentry());
+			// Automatically use sentry/sentry if detected
+			if ($this->detected_sentry_raven() and Config::$sentry_dsn !== null) {
+				$this->add_handler(new Handler\SentryRaven());
+			}
+
+			// Automatically use sentry/sdk if detected
+			if ($this->detected_sentry_sdk() and Config::$sentry_dsn !== null) {
+				$this->add_handler(new Handler\SentrySdk());
 			}
 
 			// If we configured mail, send mail too
@@ -222,8 +227,21 @@ class Handler {
 	 *
 	 * @return bool
 	 */
-	private function detected_sentry() {
+	private function detected_sentry_raven() {
 		if (class_exists('Raven_Client')) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if we have detected a sentry/sdk package
+	 *
+	 * @return bool
+	 */
+	private function detected_sentry_sdk() {
+		if (class_exists('\Sentry\SentrySdk')) {
 			return true;
 		}
 
