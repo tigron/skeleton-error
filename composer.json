@@ -9,6 +9,10 @@
             "email": "support@tigron.be"
         }
     ],
+    "suggest": {
+        "sentry/sdk": "Enables automatic reporting of issues with Sentry",
+        "filp/whoops": "Provides a pretty error interface to assist with debugging"
+    },
     "support": {
         "source": "https://github.com/tigron/skeleton-error",
         "issues": "https://github.com/tigron/skeleton-error/issues"
@@ -16,5 +20,4 @@
     "autoload": {
         "psr-4": { "Skeleton\\Error\\": "lib/Skeleton/Error/" }
     }
-
 }
