@@ -194,6 +194,45 @@ class Handler {
 	}
 
 	/**
+	 * Check if we have detected a Whoops installation
+	 *
+	 * @return bool
+	 */
+	public function detected_whoops() {
+		if (class_exists('Whoops\Run')) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if we have detected a sentry/sentry package
+	 *
+	 * @return bool
+	 */
+	public function detected_sentry_raven() {
+		if (class_exists('Raven_Client')) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if we have detected a sentry/sdk package
+	 *
+	 * @return bool
+	 */
+	public function detected_sentry_sdk() {
+		if (class_exists('\Sentry\SentrySdk')) {
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
 	 * Check if a given path has been silenced
 	 *
 	 * @param string $path
@@ -209,42 +248,4 @@ class Handler {
 		return false;
 	}
 
-	/**
-	 * Check if we have detected a Whoops installation
-	 *
-	 * @return bool
-	 */
-	private function detected_whoops() {
-		if (class_exists('Whoops\Run')) {
-			return true;
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if we have detected a sentry/sentry package
-	 *
-	 * @return bool
-	 */
-	private function detected_sentry_raven() {
-		if (class_exists('Raven_Client')) {
-			return true;
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if we have detected a sentry/sdk package
-	 *
-	 * @return bool
-	 */
-	private function detected_sentry_sdk() {
-		if (class_exists('\Sentry\SentrySdk')) {
-			return true;
-		}
-
-		return false;
-	}
 }
