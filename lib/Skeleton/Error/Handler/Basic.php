@@ -9,6 +9,7 @@
 namespace Skeleton\Error\Handler;
 
 class Basic extends Handler {
+
 	/**
 	 * This is always the last handler
 	 *
@@ -97,39 +98,49 @@ class Basic extends Handler {
 			$error_type = 'Exception';
 		}
 
-		$error_info = '';
-		$error_info .= 'Error: ' . $exception->getMessage() . "\n";
-		$error_info .= 'Type: ' . $error_type . "\n";
-		$error_info .= 'File: ' . $exception->getFile() . "\n";
-		$error_info .= 'Line: ' . $exception->getLine() . "\n\n";
-		$error_info .= 'Time: ' . date('Y-m-d H:i:s') . "\n";
+		$error_info = '<table><tr><td width="20%" valign="top">Error</td><td>' . $exception->getMessage() . '</td></tr>';
+		$error_info .= '<tr><td valign="top">Type</td><td>' . $error_type . '</td></tr>';
+		$error_info .= '<tr><td valign="top">File</td><td> ' . $exception->getFile() . ' <span style="color: #666">at</span> line ' . $exception->getLine() . '</td></tr>';
+		$error_info .= '<tr><td valign="top">Time</td><td>' . date('Y-m-d H:i:s') . '</td></tr></table>';
 
 		$html =
 		'<html>' .
 		'   <head>' .
 		'       <title>' . $subject . '</title>' .
 		'       <style type="text/css">' .
-		'           body { font-family: sans-serif; background: #eee; } ' .
-		'           pre { border: 1px solid #1b2582; background: #ccc; padding: 5px; }' .
-		'           h1 { width: 100%; background: #183452; font-weight: bold; color: #fff; padding: 2px; font-size: 16px;} ' .
-		'           h2 { font-size: 15px; } ' .
+		'           body, td { font-family: Verdana, Arial, sans-serif; font-size: 9pt } ' .
+		'           p { border: 1px solid #999; background: #fcfcfc; padding: 20px; font-size: 9pt }' .
+		'           h1 { width: 100%; font-weight: bold; color: #333; padding: 2px; font-size: 20pt;} ' .
+		'           h2 { font-size: 14pt; } ' .
+		'			pre { max-width: 650px; text-overflow: ellipsis; overflow-wrap: break-word; white-space: pre-wrap } ' .
+		'			hr { border: solid 1px #ddd }' .
 		'       </style>' .
 		'   </head>' .
-		'   <body>' .
-		'   <h1>' . $subject . '</h1>';
+		'	<body bgcolor="#eee">' .
+		'	<table width="100%" cellpadding="0" cellspacing="0" border="0">' .
+		'		<tr>' .
+		'			<td width="100%" align="center">' .
+        '				<table style="max-width: 700px" border="0" cellpadding="1" cellspacing="0"><tr><td>' .
+		'   				<h1>' . $subject . '</h1>';
 
-		$html .= '<h2>Message</h2> <pre>' . $exception->getMessage() . '</pre>';
+		$html .= '<h2>Message</h2> <div style="border: 1px solid #999; background: #fcfcfc; padding: 20px; margin-bottom: 40px">' . $exception->getMessage() . '</div>';
 
-		$html .= '<h2>Info</h2> <pre>' . $error_info . '</pre>';
+		$html .= '<h2>Info</h2> <div style="border: 1px solid #999; background: #fcfcfc; padding: 20px; margin-bottom: 40px">' . $error_info . '</div>';
 
 		// Backtraces are not very useful for anything else but real exceptions
 		if (!($exception instanceof \ErrorException)) {
-			ob_start();
-				debug_print_backtrace();
-				$backtrace = ob_get_contents();
-			ob_end_clean();
+			$backtrace_arr = debug_backtrace();
+			$backtrace = '';
+			foreach ($backtrace_arr as $key => $line) {
+				$backtrace .= '[#' . $key . '] ' . $line['file'] . ' <span style="color: #666">in</span> ' . $line['function'] . '  <span style="color: #666">at</span> line ' . $line['line'];
+				$backtrace .= '<pre>' . print_r($line['args'], true) . '</pre><br>';
 
-			$html .= '<h2>Backtrace</h2> <pre>' . $backtrace . '</pre>';
+				if ($key < count($backtrace_arr) - 1) {
+					$backtrace .= '<hr><br>';
+				}
+			}
+
+			$html .= '<h2>Backtrace</h2> <div style="border: 1px solid #999; background: #fcfcfc; padding: 20px; margin-bottom: 40px">' . $backtrace . '</div>';
 		}
 
 		$vartrace = [
@@ -140,9 +151,15 @@ class Basic extends Handler {
 			'_SERVER'   => isset($_SERVER) ? $_SERVER : null
 		];
 
-		$html .= '<h2>Vartrace</h2> <pre> ' . print_r($vartrace, true) . '</pre>';
+		$html .= '<h2>Vartrace</h2> <div style="border: 1px solid #999; background: #fcfcfc; padding: 20px; margin-bottom: 40px"><pre>' . print_r($vartrace, true) . '</pre></div>';
 
 		$html .=
+		'						</td>' .
+		'					</tr>' .
+		'				</table>' .
+		'			</td>' .
+		'		</tr>' .
+		'		</table>' .
 		'   </body>' .
 		'</html>';
 

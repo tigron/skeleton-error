@@ -7,6 +7,7 @@
  *
  * @author Christophe Gosiau <christophe@tigron.be>
  * @author Gerry Demaret <gerry@tigron.be>
+ * @author David Vandemaele <david@tigron.be>
  */
 
 namespace Skeleton\Error;
@@ -14,6 +15,7 @@ namespace Skeleton\Error;
 use Exception;
 
 class Handler {
+
 	/**
 	 * All handlers we need to execute
 	 *
@@ -41,51 +43,55 @@ class Handler {
 	public static function enable() {
 		$handler = new self();
 		$handler->register();
+
+		return $handler;
 	}
 
 	/**
 	 * Register ourselves
 	 */
 	public function register() {
-		if (!$this->is_registered) {
-			// Automatically use sentry/sentry if detected
-			if ($this->detected_sentry_raven() and Config::$sentry_dsn !== null) {
-				$this->add_handler(new Handler\SentryRaven());
-			}
-
-			// Automatically use sentry/sdk if detected
-			if ($this->detected_sentry_sdk() and Config::$sentry_dsn !== null) {
-				$this->add_handler(new Handler\SentrySdk());
-			}
-
-			// If we configured mail, send mail too
-			if (Config::$mail_errors_to !== null) {
-				$this->add_handler(new Handler\Mail());
-			}
-
-			// Always add the application handler
-			$this->add_handler(new Handler\Application());
-
-			if (Config::$debug === true) {
-				// If we detect Whoops, use that instead of our basic handler
-				if ($this->detected_whoops()) {
-					$this->add_handler(new Handler\Whoops());
-				} else {
-					$this->add_handler(new Handler\BasicCLI());
-					$this->add_handler(new Handler\Basic());
-				}
-			} else {
-				// If we are not in debug, and we end up as the last handler,
-				// send some crude error message to the user's browser.
-				$this->add_handler(new Handler\BasicOutput());
-			}
-
-			set_error_handler([$this, 'handle_error']);
-			set_exception_handler([$this, 'handle_exception']);
-			register_shutdown_function([$this, 'handle_shutdown']);
-
-			$this->is_registered = true;
+		if ($this->is_registered === true) {
+			return;
 		}
+
+		// Automatically use sentry/sentry if detected
+		if ($this->detected_sentry_raven() === true && Config::$sentry_dsn !== null) {
+			$this->add_handler(new Handler\SentryRaven());
+		}
+
+		// Automatically use sentry/sdk if detected
+		if ($this->detected_sentry_sdk() === true && Config::$sentry_dsn !== null) {
+			$this->add_handler(new Handler\SentrySdk());
+		}
+
+		// If we configured mail, send mail too
+		if (Config::$mail_errors_to !== null) {
+			$this->add_handler(new Handler\Mail());
+		}
+
+		// Always add the application handler
+		$this->add_handler(new Handler\Application());
+
+		if (Config::$debug === true) {
+			// If we detect Whoops, use that instead of our basic handler
+			if ($this->detected_whoops()) {
+				$this->add_handler(new Handler\Whoops());
+			} else {
+				$this->add_handler(new Handler\BasicCLI());
+				$this->add_handler(new Handler\Basic());
+			}
+		} else {
+			// If we are not in debug, and we end up as the last handler,
+			// send some crude error message to the user's browser.
+			$this->add_handler(new Handler\BasicOutput());
+		}
+
+		set_error_handler([$this, 'handle_error']);
+		set_exception_handler([$this, 'handle_exception']);
+		register_shutdown_function([$this, 'handle_shutdown']);
+
+		$this->is_registered = true;
 	}
 
 	/**
@@ -126,21 +132,23 @@ class Handler {
 		$output = '';
 
 		foreach ($this->handlers as $handler) {
-			if ($handler->can_run()) {
-				$handler->set_exception($exception);
+			if ($handler->can_run() === false) {
+				continue;
+			}
 
-				// The output is a concatenation of all output returned by the
-				// handlers. Ideally, we only have one handler sending output.
-				$output .= $handler->handle();
+			$handler->set_exception($exception);
 
-				if ($handler->requests_quit() === true) {
-					$quit = $handler->requests_quit();
-				}
+			// The output is a concatenation of all output returned by the
+			// handlers. Ideally, we only have one handler sending output.
+			$output .= $handler->handle();
 
-				// If the handler claims it should be the last handler, break out of the loop
-				if ($handler->is_last() === true) {
-					break;
-				}
+			if ($handler->requests_quit() === true) {
+				$quit = $handler->requests_quit();
+			}
+
+			// If the handler claims it should be the last handler, break out of the loop
+			if ($handler->is_last() === true) {
+				break;
 			}
 		}
 
@@ -194,16 +202,33 @@ class Handler {
 	}
 
 	/**
+	 * Report exception manually
+	 *
+	 * @access public
+	 * @param $exception (can be \Throwable or \Exception)
+	 */
+	public function report_exception($exception) {
+		if ($this->is_registered === false) {
+			$this->register();
+		}
+
+		foreach ($this->handlers as $handler) {
+			if ($handler->allow_report() === false) {
+				continue;
+			}
+
+			$handler->set_exception($exception);
+			$handler->handle();
+		}
+	}
+
+	/**
 	 * Check if we have detected a Whoops installation
 	 *
 	 * @return bool
 	 */
-	public function detected_whoops() {
-		if (class_exists('Whoops\Run')) {
-			return true;
-		}
-
-		return false;
+	private function detected_whoops() {
+		return class_exists('Whoops\Run');
 	}
 
 	/**
@@ -211,12 +236,8 @@ class Handler {
 	 *
 	 * @return bool
 	 */
-	public function detected_sentry_raven() {
-		if (class_exists('Raven_Client')) {
-			return true;
-		}
-
-		return false;
+	private function detected_sentry_raven() {
+		return class_exists('Raven_Client');
 	}
 
 	/**
@@ -224,12 +245,8 @@ class Handler {
 	 *
 	 * @return bool
 	 */
-	public function detected_sentry_sdk() {
-		if (class_exists('\Sentry\SentrySdk')) {
-			return true;
-		}
-
-		return false;
+	private function detected_sentry_sdk() {
+		return class_exists('\Sentry\SentrySdk');
 	}
 
 	/**
@@ -240,9 +257,11 @@ class Handler {
 	 */
 	private function is_silenced($path) {
 		foreach ($this->silenced_paths as $silenced_path) {
-			if (preg_match($silenced_path, $path)) {
-				return true;
+			if (preg_match($silenced_path, $path) === false) {
+				continue;
 			}
+
+			return true;
 		}
 
 		return false;

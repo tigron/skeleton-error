@@ -9,6 +9,7 @@
 namespace Skeleton\Error\Handler;
 
 class BasicCLI extends Handler {
+
 	/**
 	 * Handle an error with the most basic handler on the CLI
 	 *

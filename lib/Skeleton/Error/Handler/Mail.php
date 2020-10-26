@@ -4,11 +4,20 @@
  *
  * @author Christophe Gosiau <christophe@tigron.be>
  * @author Gerry Demaret <gerry@tigron.be>
+ * @author David Vandemaele <david@tigron.be>
  */
 
 namespace Skeleton\Error\Handler;
 
 class Mail extends Handler {
+
+	/**
+	 * Handle when reporting exception manually
+	 *
+	 * @var bool $reports
+	 */
+	protected $reports = true;
+
 	/**
 	 * Handle an error by sending mail
 	 *

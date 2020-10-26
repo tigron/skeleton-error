@@ -31,6 +31,13 @@ abstract class Handler implements HandlerInterface {
 	protected $last_handler = false;
 
 	/**
+	 * Handle when reporting exception manually
+	 *
+	 * @var bool $reports
+	 */
+	protected $reports = false;
+
+	/**
 	 * Set the exception to handle
 	 *
 	 * @param $exception (can be \Throwable or \Exception)
@@ -67,5 +74,9 @@ abstract class Handler implements HandlerInterface {
 	 */
 	public function is_last() {
 		return $this->last_handler;
+	}
+
+	public function allow_report() {
+		return $this->reports;
 	}
 }

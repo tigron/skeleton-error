@@ -9,6 +9,7 @@
 namespace Skeleton\Error\Handler;
 
 class Whoops extends Handler {
+
 	/**
 	 * Always quit after Whoops, other output is unreadable anyway
 	 *

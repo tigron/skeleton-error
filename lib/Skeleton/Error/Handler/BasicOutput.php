@@ -9,6 +9,7 @@
 namespace Skeleton\Error\Handler;
 
 class BasicOutput extends Handler {
+
 	/**
 	 * This is always the last handler
 	 *

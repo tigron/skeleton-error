@@ -23,4 +23,10 @@ interface HandlerInterface {
 	 * @return bool
 	 */
 	public function can_run();
+
+	/**
+	 * @return bool
+	 */
+	public function allow_report();
+
 }
