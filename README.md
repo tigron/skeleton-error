@@ -70,11 +70,14 @@ The `sentry_before_send` can have two different signatures, depending on the
 version of Sentry you have installed.
 
 For `sentry\sdk` (which depends on `sentry/sentry` version 2 or higher), the
-event will be called as the `beforeSend` callback. More information is available
+event will be called as the `beforeSend` callback. In the example below, we use
+`$event->getUserContext()` for version 2, whereas version 3 should use
+`$event->getUser()`. More information is available
 [here](https://docs.sentry.io/platforms/php/configuration/filtering/#using-beforesend)
 
-    public function sentry_before_send(Sentry\Event $event) {
-        $event->getUser()->setUsername('john-doe');
+    public function sentry_before_send(\Sentry\Event $event) {
+        $event->getUserContext()->setUsername('john-doe');
+        return $event;
     }
 
 For the deprecated `sentry\sentry` version 1 and below, the event will be called
