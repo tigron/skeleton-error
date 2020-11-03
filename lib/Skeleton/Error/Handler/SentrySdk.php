@@ -35,7 +35,7 @@ class SentrySdk extends Handler {
 			}
 
 			if ($application !== null && $application->event_exists('error', 'sentry_before_send')) {
-				$options['before_send'] = Closure::fromCallable($application->get_event_callable('error', 'sentry_before_send'));
+				$options['before_send'] = \Closure::fromCallable($application->get_event_callable('error', 'sentry_before_send'));
 			}
 		}
 
