@@ -1,10 +1,6 @@
 <?php
 /**
- * Config class
  * Configuration for Skeleton\Error
- *
- * @author Christophe Gosiau <christophe@tigron.be>
- * @author Gerry Demaret <gerry@tigron.be>
  */
 
 namespace Skeleton\Error;
@@ -20,6 +16,20 @@ class Config {
 	 * @var string $tmp_directory
 	 */
 	public static $debug = false;
+
+	/**
+	 * Environment
+	 *
+	 * The environment identifier
+	 */
+	public static $environment = null;
+
+	/**
+	 * Release
+	 *
+	 * The release identifier
+	 */
+	public static $release = null;
 
 	/**
 	 * errors_from
