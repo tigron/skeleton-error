@@ -132,7 +132,19 @@ class Basic extends Handler {
 			$backtrace_arr = debug_backtrace();
 			$backtrace = '';
 			foreach ($backtrace_arr as $key => $line) {
-				$backtrace .= '[#' . $key . '] ' . $line['file'] . ' <span style="color: #666">in</span> ' . $line['function'] . '  <span style="color: #666">at</span> line ' . $line['line'];
+				if (isset($line['line'])) {
+					$line_number = $line['line'];
+				} else {
+					$line_number = '-';
+				}
+
+				if (isset($line['file'])) {
+					$filename = $line['file'];
+				} else {
+					$filename = '-';
+				}
+
+				$backtrace .= '[#' . $key . '] ' . $filename . ' <span style="color: #666">in</span> ' . $line['function'] . '  <span style="color: #666">at</span> line ' . $line_number;
 				$backtrace .= '<pre>' . print_r($line['args'], true) . '</pre><br>';
 
 				if ($key < count($backtrace_arr) - 1) {
