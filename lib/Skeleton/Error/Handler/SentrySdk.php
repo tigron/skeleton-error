@@ -48,11 +48,11 @@ class SentrySdk extends Handler {
 		}
 
 		$builder = \Sentry\ClientBuilder::create($options);
-		\Sentry\State\Hub::getCurrent()->bindClient($builder->getClient());
+		\Sentry\SentrySdk::getCurrentHub()->bindClient($builder->getClient());
 
 		// Assign the session to the extra context
 		if (isset($_SESSION)) {
-			\Sentry\State\Hub::getCurrent()->configureScope(function (\Sentry\State\Scope $scope): void {
+			\Sentry\SentrySdk::getCurrentHub()->configureScope(function (\Sentry\State\Scope $scope): void {
 				$scope->setExtra('session', print_r($_SESSION, true));
 			});
 		}
