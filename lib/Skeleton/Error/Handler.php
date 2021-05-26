@@ -87,9 +87,9 @@ class Handler {
 			$this->add_handler(new Handler\BasicOutput());
 		}
 
+		register_shutdown_function([$this, 'handle_shutdown']);
 		set_error_handler([$this, 'handle_error']);
 		set_exception_handler([$this, 'handle_exception']);
-		register_shutdown_function([$this, 'handle_shutdown']);
 
 		$this->is_registered = true;
 	}
@@ -197,8 +197,10 @@ class Handler {
 		if ($this->is_registered === false) {
 			return;
 		}
-
-		// Do something useful here.
+		$error = error_get_last();
+		if ($error !== null) {
+			$this->handle_exception(new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line']));
+		}
 	}
 
 	/**
