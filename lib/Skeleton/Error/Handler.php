@@ -38,6 +38,13 @@ class Handler {
 	private $is_registered = false;
 
 	/**
+	 * Error reporting
+	 *
+	 * @var int $error_reporting
+	 */
+	private $error_reporting = false;	
+
+	/**
 	 * Enable the error handler, assuming defaults
 	 */
 	public static function enable() {
@@ -54,6 +61,9 @@ class Handler {
 		if ($this->is_registered === true) {
 			return;
 		}
+
+		$this->error_reporting = error_reporting();
+		error_reporting(0);
 
 		// Automatically use sentry/sentry if detected
 		if ($this->detected_sentry_raven() === true && Config::$sentry_dsn !== null) {
@@ -90,6 +100,7 @@ class Handler {
 		register_shutdown_function([$this, 'handle_shutdown']);
 		set_error_handler([$this, 'handle_error']);
 		set_exception_handler([$this, 'handle_exception']);
+		
 
 		$this->is_registered = true;
 	}
@@ -175,7 +186,7 @@ class Handler {
 	 * @return bool
 	 */
 	public function handle_error($level, $message, $file = null, $line = null) {
-		if ($level & error_reporting()) {
+		if ($level & $this->error_reporting) {
 			if ($this->is_silenced($file)) {
 				return true;
 			}
@@ -198,6 +209,18 @@ class Handler {
 			return;
 		}
 		$error = error_get_last();
+		if ($error === null) {
+			return true;
+		}
+
+		/**
+		 * We cannot handle errors of any type.
+		 * The following errors shall be handled
+		 */
+		if (!($error['type'] & $this->error_reporting)) {
+			return;
+		}
+
 		if ($error !== null) {
 			$this->handle_exception(new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line']));
 		}
