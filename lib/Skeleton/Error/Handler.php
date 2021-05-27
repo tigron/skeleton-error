@@ -208,22 +208,6 @@ class Handler {
 		if ($this->is_registered === false) {
 			return;
 		}
-		$error = error_get_last();
-		if ($error === null) {
-			return true;
-		}
-
-		/**
-		 * We cannot handle errors of any type.
-		 * The following errors shall be handled
-		 */
-		if (!($error['type'] & $this->error_reporting)) {
-			return;
-		}
-
-		if ($error !== null) {
-			$this->handle_exception(new \ErrorException($error['message'], 0, $error['type'], $error['file'], $error['line']));
-		}
 	}
 
 	/**
