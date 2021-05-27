@@ -38,13 +38,6 @@ class Handler {
 	private $is_registered = false;
 
 	/**
-	 * Error reporting
-	 *
-	 * @var int $error_reporting
-	 */
-	private $error_reporting = false;	
-
-	/**
 	 * Enable the error handler, assuming defaults
 	 */
 	public static function enable() {
@@ -61,9 +54,6 @@ class Handler {
 		if ($this->is_registered === true) {
 			return;
 		}
-
-		$this->error_reporting = error_reporting();
-		error_reporting(0);
 
 		// Automatically use sentry/sentry if detected
 		if ($this->detected_sentry_raven() === true && Config::$sentry_dsn !== null) {
@@ -186,7 +176,7 @@ class Handler {
 	 * @return bool
 	 */
 	public function handle_error($level, $message, $file = null, $line = null) {
-		if ($level & $this->error_reporting) {
+		if ($level & error_reporting()) {
 			if ($this->is_silenced($file)) {
 				return true;
 			}
