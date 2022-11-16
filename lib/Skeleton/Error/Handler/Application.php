@@ -24,8 +24,13 @@ class Application extends Handler {
 		if ($application->event_exists('error', 'exception')) {
 			// If the error is handled within the application, no need to continue
 			// internally.
-			$this->last_handler = true;
-			$application->call_event_if_exists('error', 'exception', [ $this->exception ]);
+
+			$proceed = $application->call_event('error', 'exception', [ $this->exception ]);
+			if ($proceed === true) {
+				$this->last_handler = false;
+			} else {
+				$this->last_handler = true;			
+			}
 		}
 	}
 
