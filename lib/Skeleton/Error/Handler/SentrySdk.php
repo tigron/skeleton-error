@@ -51,18 +51,28 @@ class SentrySdk extends Handler {
 		\Sentry\SentrySdk::getCurrentHub()->bindClient($builder->getClient());
 
 		// Assign the session to the extra context
+		$environment = [];
 		if (isset($_SESSION)) {
-			\Sentry\SentrySdk::getCurrentHub()->configureScope(function (\Sentry\State\Scope $scope): void {
-				$scope->setContext('environment', [
-					'session' => $_SESSION,
-					'post' => $_POST,
-					'get' => $_GET,
-					'server' => $_SERVER,
-				]);
-				if (isset($_SERVER['REMOTE_ADDR'])) {
-					$scope->setUser(['ip_address' => $_SERVER['REMOTE_ADDR'] ]);
+			$environment['session'] = $_SESSION;
+		}
+		if (!empty($_POST)) {
+			$environment['post'] = $_POST;
+		}
+		if (!empty($_GET)) {
+			$environment['get'] = $_GET;
+		}
+		if (isset($_SERVER)) {
+			$environment['server'] = $_SERVER;
+		}
+		if (count($environment) > 0) {
+			\Sentry\SentrySdk::getCurrentHub()->configureScope(
+				function (\Sentry\State\Scope $scope) use ($environment): void {
+					$scope->setContext('environment', $environment);
+					if (isset($_SERVER['REMOTE_ADDR'])) {
+						$scope->setUser(['ip_address' => $_SERVER['REMOTE_ADDR'] ]);
+					}
 				}
-			});
+			);
 		}
 
 		\Sentry\SentrySdk::getCurrentHub()->captureException($this->exception);
