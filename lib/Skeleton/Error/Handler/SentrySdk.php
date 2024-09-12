@@ -53,7 +53,15 @@ class SentrySdk extends Handler {
 		// Assign the session to the extra context
 		if (isset($_SESSION)) {
 			\Sentry\SentrySdk::getCurrentHub()->configureScope(function (\Sentry\State\Scope $scope): void {
-				$scope->setExtra('session', print_r($_SESSION, true));
+				$scope->setContext('environment', [
+					'session' => $_SESSION,
+					'post' => $_POST,
+					'get' => $_GET,
+					'server' => $_SERVER,
+				]);
+				if (isset($_SERVER['REMOTE_ADDR'])) {
+					$scope->setUser(['ip_address' => $_SERVER['REMOTE_ADDR'] ]);
+				}
 			});
 		}
 
