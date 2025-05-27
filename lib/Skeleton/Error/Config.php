@@ -60,4 +60,14 @@ class Config {
 	 * @var string $sentry_dsn;
 	 */
 	public static $sentry_dsn = null;
+
+	/**
+	 * error_reporting
+	 *
+	 * Override PHP's error_reporting level
+	 *
+	 * @access public
+	 * @var int $error_reporting
+	 */
+	public static int $error_reporting = E_ALL;
 }

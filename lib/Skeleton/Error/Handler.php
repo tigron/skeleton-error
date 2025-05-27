@@ -41,6 +41,8 @@ class Handler {
 	 * Enable the error handler, assuming defaults
 	 */
 	public static function enable() {
+		error_reporting(Config::$error_reporting);
+
 		$handler = new self();
 		$handler->register();
 
