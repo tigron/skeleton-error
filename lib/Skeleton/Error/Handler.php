@@ -17,6 +17,13 @@ use Exception;
 class Handler {
 
 	/**
+	 * Handler singleton
+	 *
+	 * @var array
+	 */
+	private static ?self $handler = null;
+
+	/**
 	 * All handlers we need to execute
 	 *
 	 * @var array
@@ -40,13 +47,26 @@ class Handler {
 	/**
 	 * Enable the error handler, assuming defaults
 	 */
-	public static function enable() {
+	public static function enable(): self {
 		error_reporting(Config::$error_reporting);
 
 		$handler = new self();
 		$handler->register();
 
-		return $handler;
+		self::$handler = $handler;
+
+		return self::$handler;
+	}
+
+	/**
+	 * Get the current hanlder
+	 */
+	public static function get(): self {
+		if (self::$handler === null) {
+			throw new \Exception('Error handling not enabled');
+		}
+
+		return self::$handler;
 	}
 
 	/**
@@ -267,5 +287,4 @@ class Handler {
 
 		return false;
 	}
-
 }
