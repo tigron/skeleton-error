@@ -37,6 +37,11 @@ reports. This is currently only supported by the `sentry` handler:
     \Skeleton\Error\Config::$environment = 'development';
     \Skeleton\Error\Config::$release = 'project@1.0.0';
 
+By default, the level for `error_reporting` will be set to `E_ALL`. You can
+configure a different level if desired:
+
+    \Skeleton\Error\Config::$error_reporting = E_ALL & ~E_STRICT;
+
 ### E-mail handler
 
 If you would like to receive error reports via e-mail, set the `mail_errors_to`
